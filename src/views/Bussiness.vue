@@ -65,7 +65,7 @@ export default {
     function FnAddBussiness() {
       dialogVisible.value = !dialogVisible.value;
     }
-    export const submitForm = (formEl = undefined) => {
+    const submitForm = (formEl = undefined) => {
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
@@ -76,7 +76,7 @@ export default {
         }
       });
     };
-    export const resetForm = (formEl = undefined) => {
+    const resetForm = (formEl = undefined) => {
       if (!formEl) return;
       formEl.resetFields();
     };
