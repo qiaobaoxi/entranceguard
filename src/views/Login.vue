@@ -37,8 +37,8 @@ export default {
     setup() {
         const router = useRouter();
         const param = reactive({
-            username: "",
-            password: "",
+            username: "admin",
+            password: "331751",
         });
         const rules = {
             username: [
@@ -57,7 +57,8 @@ export default {
             login.value.validate((valid) => {
                 if (valid) {
                     loginApi({username:param.username,password:md5(param.password)}).then((res)=>{
-                        if(res.code===200){
+                        if(res.code===1){
+                            localStorage.setItem("token",res.data.token);
                             ElMessage.success("登录成功");
                             localStorage.setItem("ms_username", param.username);
                             router.push("/");
@@ -75,9 +76,8 @@ export default {
         const store = useStore();
         store.commit("clearTags");
         
-         getBussinessListApi().then(()=>{
-            
-        })
+        // getBussinessListApi().then(()=>{
+        // })
 
         return {
             param,

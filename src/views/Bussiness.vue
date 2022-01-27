@@ -9,41 +9,30 @@
       <el-table-column prop="name" label="Name" width="180" />
       <el-table-column prop="address" label="Address" />
     </el-table>
-    <el-dialog
-      v-model="dialogVisible"
-      title="Tips"
-      width="30%"
-      :before-close="FnAddBussiness"
-      :close-on-click-modal="false"
+    <my-dialog
+      :dialogVisible="dialogVisible"
+      :dialogTitle="dialogTitle"
+      @FnDialogClose="FnAddBussiness"
     >
-      <el-form
-        ref="ruleFormRef"
-        :model="ruleForm"
-        :rules="rules"
-        label-width="120px"
-        class="demo-ruleForm"
-        :size="formSize"
-      >
+      <my-form :rules="rules" :ruleForm="ruleForm">
         <el-form-item label="公司名" prop="name">
           <el-input v-model="ruleForm.name"></el-input>
         </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="submitForm(ruleFormRef)"
-            >Submit</el-button
-          >
-          <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
+      </my-form>
+    </my-dialog>
   </div>
 </template>
 
 <script>
+import MyDialog from "@/components/MyDialog.vue";
+import MyForm from "@/components/MyForm.vue";
 import { reactive, ref } from "vue";
 export default {
   name: "dashboard",
   setup() {
+    // 数据初始化
     const dialogVisible = ref(false);
+    const dialogTitle = ref("添加");
     const ruleForm = reactive({
       name: "",
     });
@@ -56,7 +45,7 @@ export default {
         },
         {
           min: 3,
-          max: 5,
+          max: 12,
           message: "请输入3~12个字",
           trigger: "blur",
         },
@@ -64,6 +53,10 @@ export default {
     });
     function FnAddBussiness() {
       dialogVisible.value = !dialogVisible.value;
+      if (dialogVisible.value) {
+        ruleForm.name="";
+        dialogTitle.value = "添加";
+      }
     }
     const submitForm = (formEl = undefined) => {
       if (!formEl) return;
@@ -87,8 +80,13 @@ export default {
       ruleForm,
       rules,
       submitForm,
-      resetForm
+      resetForm,
+      dialogTitle,
     };
+  },
+  components: {
+    MyDialog,
+    MyForm,
   },
 };
 </script>
