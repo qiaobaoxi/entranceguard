@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { toRefs, ref, watch } from "vue";
+import { toRefs, ref } from "vue";
 export default {
   props: {
     ruleForm: {
@@ -36,16 +36,15 @@ export default {
       default: "default",
     },
   },
-  setup(props) {
+  setup(props,context) {
     const { ruleForm, rules, formSize } = toRefs(props);
     const ruleFormRef = ref();
     const submitForm = (formEl = undefined) => {
       if (!formEl) return;
       formEl.validate((valid) => {
         if (valid) {
-          console.log("submit!");
+          context.emit("FnSubmit")
         } else {
-          console.log("error submit!");
           return false;
         }
       });
@@ -54,13 +53,6 @@ export default {
       if (!formEl) return;
       formEl.resetFields();
     };
-    watch(
-      () => ruleForm.name,
-      () => {
-        //通过一个函数返回要监听的属性
-        console.log("书名改变了");
-      }
-    );
     return {
       submitForm,
       resetForm,

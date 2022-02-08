@@ -12,4 +12,18 @@ export const getBussinessListApi = query => {
         }
     );
 };
-
+export const createBussinessApi = query => {
+    return request.post(
+        '/api/createBussiness', query
+    );
+};
+export const editBussinessApi = query => {
+    return request.post(
+        '/api/editBussiness', query
+    );
+};
+export const deleteBussinessApi = query => {
+    return request.post(
+        '/api/deleteBussiness', query
+    );
+};
