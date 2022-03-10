@@ -1,12 +1,12 @@
 <template>
   <div>
     <div class="option">
-      <el-button type="primary" @click="FnAddBussiness">添加</el-button>
+      <el-button type="primary" @click="FnAddUser">添加</el-button>
     </div>
     <el-table :data="tableList.data" style="width: 100%">
       <el-table-column type="index" width="180" />
-      <el-table-column prop="bussinessNum" label="公司号" />
-      <el-table-column prop="bussinessName" label="公司名" />
+      <el-table-column prop="userNum" label="员工号" />
+      <el-table-column prop="userName" label="员工名" />
       <el-table-column
         prop="createDate"
         :formatter="formatTime"
@@ -25,47 +25,21 @@
           <el-button type="text" size="small" @click="FnDelet(scoped.row)"
             >删除</el-button
           >
-          <el-button type="text" size="small" @click="FnAddUser(scoped.row)"
-            >添加员工</el-button
-          >
         </template>
       </el-table-column>
     </el-table>
-    <pagination :total="total"></pagination>
+     <pagination :total="total"></pagination>
     <my-dialog
       :dialogVisible="dialogVisible"
       :dialogTitle="dialogTitle"
       @FnDialogClose="FnIsShow"
     >
       <my-form :rules="rules" :ruleForm="ruleForm" @FnSubmit="FnSubmit">
-        <el-form-item label="公司名" prop="name">
+        <el-form-item label="员工名" prop="name">
           <el-input v-model="ruleForm.name"></el-input>
         </el-form-item>
-        <el-form-item label="公司号" prop="num">
+        <el-form-item label="员工号" prop="num">
           <el-input-number :min="1" v-model="ruleForm.num" />
-        </el-form-item>
-      </my-form>
-    </my-dialog>
-    <my-dialog
-      :dialogVisible="dialogUserVisible"
-      :dialogTitle="dialogTitle"
-      @FnDialogClose="FnIsAddUserShow"
-    >
-      <my-form
-        :rules="userrules"
-        :ruleForm="ruleUserForm"
-        @FnSubmit="FnUserSubmit"
-      >
-        <el-form-item label="员工" prop="ids">
-          <el-select v-model="ruleUserForm.ids"  multiple placeholder="Select">
-            <el-option
-              v-for="item in users.data"
-              :key="item.id"
-              :label="item.userName"
-              :value="item.id"
-            >
-            </el-option>
-          </el-select>
         </el-form-item>
       </my-form>
     </my-dialog>
@@ -79,12 +53,10 @@ import Pagination from "@/components/Pagination.vue";
 import { formatTime } from "../utils/index.js";
 import { reactive, ref } from "vue";
 import {
-  createBussinessApi,
-  getBussinessListApi,
-  editBussinessApi,
-  deleteBussinessApi,
-  getUserListAllApi,
-  saveBussinessAnduserApi,
+  createUserApi,
+  getUserListApi,
+  editUserApi,
+  deleteUserApi,
 } from "@/api";
 import { ElMessage, ElMessageBox } from "element-plus";
 export default {
@@ -92,7 +64,6 @@ export default {
   setup() {
     // 数据初始化
     const dialogVisible = ref(false);
-    const dialogUserVisible = ref(false);
     const page = ref(1);
     const pageSize = ref(10);
     const total = ref(0);
@@ -101,20 +72,14 @@ export default {
       name: "",
       num: 1,
     });
-    const ruleUserForm = reactive({
-      ids: [],
-    });
     const tableList = reactive({
-      data: [],
-    });
-    const users = reactive({
       data: [],
     });
     const rules = reactive({
       name: [
         {
           required: true,
-          message: "请输入公司名字",
+          message: "请输入员工名字",
           trigger: "blur",
         },
         {
@@ -125,31 +90,22 @@ export default {
         },
       ],
     });
-    const userrules = reactive({
-      ids: [
-        {
-          required: true,
-          message: "请选择员工",
-          trigger: "blur",
-        },
-      ],
-    });
     function FnIsShow() {
       dialogVisible.value = !dialogVisible.value;
     }
-    function FnAddBussiness() {
+    function FnAddUser() {
       FnIsShow();
       if (dialogVisible.value) {
         ruleForm.name = "";
         dialogTitle.value = "添加";
       }
     }
-    function FnEditBussiness() {
+    function FnEditUser() {
       FnIsShow();
     }
     const FnSubmit = () => {
       if (ruleForm.id) {
-        editBussinessApi({
+        editUserApi({
           id: ruleForm.id,
           name: ruleForm.name,
           num: ruleForm.num,
@@ -158,20 +114,20 @@ export default {
             ElMessage.success("编辑成功");
             ruleForm.name = "";
             ruleForm.num = "";
-            FnEditBussiness();
+            FnEditUser();
             init();
           } else {
             ElMessage.warning(res.msg);
           }
         });
       } else {
-        createBussinessApi({ name: ruleForm.name, num: ruleForm.num }).then(
+        createUserApi({ name: ruleForm.name, num: ruleForm.num }).then(
           (res) => {
             if (res.code) {
               ElMessage.success("添加成功");
               ruleForm.name = "";
               ruleForm.num = "";
-              FnAddBussiness();
+              FnAddUser();
               init();
             } else {
               ElMessage.warning(res.msg);
@@ -182,19 +138,23 @@ export default {
     };
     const FnEdit = function (row) {
       ruleForm.id = row.id;
-      ruleForm.name = row.bussinessName;
-      ruleForm.num = row.bussinessNum;
+      ruleForm.name = row.userName;
+      ruleForm.num = row.userNum;
       dialogTitle.value = "编辑";
-      FnEditBussiness();
+      FnEditUser();
     };
     const FnDelet = function (row) {
-      ElMessageBox.confirm("是否删除?", "Warning", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning",
-      })
+      ElMessageBox.confirm(
+        "是否删除?",
+        "Warning",
+        {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning",
+        }
+      )
         .then(() => {
-          deleteBussinessApi({ id: row.id }).then((res) => {
+          deleteUserApi({ id: row.id }).then((res) => {
             if (res.code) {
               init();
             } else {
@@ -209,62 +169,23 @@ export default {
           });
         });
     };
-    function FnIsAddUserShow() {
-      dialogUserVisible.value = !dialogUserVisible.value;
-    }
-    let bussinessId = 0;
-    let relationUserId=null;
-    function FnAddUser(row) {
-      bussinessId = row.id;
-      relationUserId=row.relationData?row.relationData.id:null;
-      ruleUserForm.ids=row.relationData?row.relationData.usersId.split(",").map((item)=>{
-        return parseInt(item)
-      }):"";
-      FnIsAddUserShow();
-      if (dialogUserVisible.value) {
-        dialogTitle.value = "添加员工";
-      }
-    }
-    //公司关联员工
-    function FnUserSubmit() {
-      saveBussinessAnduserApi({
-        id:relationUserId,
-        bussinessId,
-        usersId: ruleUserForm.ids,
-      }).then((res) => {
-        if (res.code) {
-          init();
-          FnIsAddUserShow();
-          ElMessage.success("修改成功");
-        } else {
-          ElMessage.warning(res.msg);
-        }
-      });
-    }
     init();
     function init() {
-      getBussinessListApi({ page: page.value, pageSize: pageSize.value }).then(
+      getUserListApi({ page: page.value, pageSize: pageSize.value }).then(
         (res) => {
           if (res.code) {
             tableList.data = res.data.list;
-            total.value = res.data.total;
+            total.value=res.data.count;
           } else {
             ElMessage.warning(res.msg);
           }
         }
       );
-      getUserListAllApi().then((res) => {
-        if (res.code) {
-          users.data = res.data.list;
-        } else {
-          ElMessage.warning(res.msg);
-        }
-      });
     }
     return {
       dialogVisible,
       tableList,
-      FnAddBussiness,
+      FnAddUser,
       ruleForm,
       rules,
       dialogTitle,
@@ -273,21 +194,13 @@ export default {
       FnEdit,
       FnDelet,
       FnIsShow,
-      FnAddUser,
-      userrules,
-      ruleUserForm,
-      total,
-      users,
-      dialogUserVisible,
-      FnIsAddUserShow,
-      FnUserSubmit,
-      
+      total
     };
   },
   components: {
     MyDialog,
     MyForm,
-    Pagination,
+    Pagination
   },
 };
 </script>

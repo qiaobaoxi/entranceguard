@@ -18,6 +18,13 @@ const routes = [
                 },
                 component: () => import( /* webpackChunkName: "dashboard" */ "../views/Bussiness.vue")
             },{
+                path: "/user",
+                name: "User",
+                meta: {
+                    title: '员工列表'
+                },
+                component: () => import( /* webpackChunkName: "dashboard" */ "../views/User.vue")
+            },{
                 path: '/404',
                 name: '404',
                 meta: {

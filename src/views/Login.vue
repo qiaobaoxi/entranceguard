@@ -32,7 +32,7 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import md5  from "md5";
-import {loginApi,getBussinessListApi } from "@/api"
+import {loginApi} from "@/api"
 export default {
     setup() {
         const router = useRouter();
@@ -75,10 +75,6 @@ export default {
 
         const store = useStore();
         store.commit("clearTags");
-        
-        // getBussinessListApi().then(()=>{
-        // })
-
         return {
             param,
             rules,

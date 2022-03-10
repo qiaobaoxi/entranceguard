@@ -43,6 +43,11 @@ export default {
                 index: "/bussiness",
                 title: "公司",
             },
+            {
+                icon: "el-icon-lx-home",
+                index: "/user",
+                title: "员工",
+            },
         ];
         const route = useRoute();
         const onRoutes = computed(() => {
