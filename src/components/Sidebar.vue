@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { useStore } from "vuex";
 import { useRoute } from "vue-router";
 export default {
@@ -47,6 +47,11 @@ export default {
                 icon: "el-icon-lx-home",
                 index: "/user",
                 title: "员工",
+            },
+            {
+                icon: "el-icon-lx-home",
+                index: "/card",
+                title: "卡",
             },
         ];
         const route = useRoute();

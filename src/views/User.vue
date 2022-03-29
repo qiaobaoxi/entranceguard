@@ -7,6 +7,11 @@
       <el-table-column type="index" width="180" />
       <el-table-column prop="userNum" label="员工号" />
       <el-table-column prop="userName" label="员工名" />
+      <el-table-column  label="卡号" >
+        <template #default="scoped">
+          {{scoped.row.relationData?scoped.row.relationData.cardsId:""}}
+        </template>
+      </el-table-column>
       <el-table-column
         prop="createDate"
         :formatter="formatTime"
@@ -24,6 +29,9 @@
           >
           <el-button type="text" size="small" @click="FnDelet(scoped.row)"
             >删除</el-button
+          >
+          <el-button type="text" size="small" @click="FnAddCard(scoped.row)"
+            >添加卡</el-button
           >
         </template>
       </el-table-column>
@@ -43,6 +51,29 @@
         </el-form-item>
       </my-form>
     </my-dialog>
+    <my-dialog
+      :dialogVisible="dialogCardVisible"
+      :dialogTitle="dialogTitle"
+      @FnDialogClose="FnIsAddCardShow"
+    >
+      <my-form
+        :rules="cardrules"
+        :ruleForm="ruleCardForm"
+        @FnSubmit="FnCardSubmit"
+      >
+        <el-form-item label="卡" prop="ids">
+          <el-select v-model="ruleCardForm.ids"  multiple placeholder="Select">
+            <el-option
+              v-for="item in cards.data"
+              :key="item.id"
+              :label="item.cardName"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </my-form>
+    </my-dialog>
   </div>
 </template>
 
@@ -57,6 +88,8 @@ import {
   getUserListApi,
   editUserApi,
   deleteUserApi,
+  getCardListAllApi,
+  saveUserAndcardApi
 } from "@/api";
 import { ElMessage, ElMessageBox } from "element-plus";
 export default {
@@ -64,6 +97,7 @@ export default {
   setup() {
     // 数据初始化
     const dialogVisible = ref(false);
+    const dialogCardVisible = ref(false);
     const page = ref(1);
     const pageSize = ref(10);
     const total = ref(0);
@@ -74,6 +108,12 @@ export default {
     });
     const tableList = reactive({
       data: [],
+    });
+    const cards = reactive({
+      data: [],
+    });
+    const ruleCardForm = reactive({
+      ids: [],
     });
     const rules = reactive({
       name: [
@@ -86,6 +126,15 @@ export default {
           min: 3,
           max: 12,
           message: "请输入3~12个字",
+          trigger: "blur",
+        },
+      ],
+    });
+    const cardrules = reactive({
+      ids: [
+        {
+          required: true,
+          message: "请选择卡",
           trigger: "blur",
         },
       ],
@@ -182,6 +231,46 @@ export default {
         }
       );
     }
+    //添加卡
+    function FnIsAddCardShow() {
+      dialogCardVisible.value = !dialogCardVisible.value;
+    }
+    let userId = 0;
+    let relationCardId=null;
+    function FnAddCard(row) {
+      userId = row.id;
+      relationCardId=row.relationData?row.relationData.id:null;
+      ruleCardForm.ids=row.relationData?row.relationData.cardsId.split(",").map((item)=>{
+        return parseInt(item)
+      }):"";
+      FnIsAddCardShow();
+      if (dialogCardVisible.value) {
+        dialogTitle.value = "添加卡";
+      }
+    }
+    getCardListAllApi().then((res) => {
+        if (res.code) {
+          cards.data = res.data.list;
+        } else {
+          ElMessage.warning(res.msg);
+        }
+      });
+    //公司关联员工
+    function FnCardSubmit() {
+      saveUserAndcardApi({
+        id:relationCardId,
+        userId,
+        cardsId: ruleCardForm.ids,
+      }).then((res) => {
+        if (res.code) {
+          init();
+          FnIsAddCardShow();
+          ElMessage.success("修改成功");
+        } else {
+          ElMessage.warning(res.msg);
+        }
+      });
+    }
     return {
       dialogVisible,
       tableList,
@@ -194,7 +283,14 @@ export default {
       FnEdit,
       FnDelet,
       FnIsShow,
-      total
+      total,
+      FnIsAddCardShow,
+      FnCardSubmit,
+      cardrules,
+      FnAddCard,
+      dialogCardVisible,
+      ruleCardForm,
+      cards
     };
   },
   components: {

@@ -7,6 +7,7 @@
       <el-table-column type="index" width="180" />
       <el-table-column prop="bussinessNum" label="公司号" />
       <el-table-column prop="bussinessName" label="公司名" />
+      <el-table-column prop="usersName" label="员工" />
       <el-table-column
         prop="createDate"
         :formatter="formatTime"
@@ -27,6 +28,9 @@
           >
           <el-button type="text" size="small" @click="FnAddUser(scoped.row)"
             >添加员工</el-button
+          >
+          <el-button type="text" size="small" @click="FnAddCard(scoped.row)"
+            >添加卡</el-button
           >
         </template>
       </el-table-column>
@@ -57,11 +61,34 @@
         @FnSubmit="FnUserSubmit"
       >
         <el-form-item label="员工" prop="ids">
-          <el-select v-model="ruleUserForm.ids"  multiple placeholder="Select">
+          <el-select v-model="ruleUserForm.ids" multiple placeholder="Select">
             <el-option
               v-for="item in users.data"
               :key="item.id"
               :label="item.userName"
+              :value="item.id"
+            >
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </my-form>
+    </my-dialog>
+    <my-dialog
+      :dialogVisible="dialogCardVisible"
+      :dialogTitle="dialogTitle"
+      @FnDialogClose="FnIsAddCardShow"
+    >
+      <my-form
+        :rules="cardrules"
+        :ruleForm="ruleCardForm"
+        @FnSubmit="FnCardSubmit"
+      >
+        <el-form-item label="卡" prop="ids">
+          <el-select v-model="ruleCardForm.ids" multiple placeholder="Select">
+            <el-option
+              v-for="item in cards.data"
+              :key="item.id"
+              :label="item.cardName"
               :value="item.id"
             >
             </el-option>
@@ -85,6 +112,7 @@ import {
   deleteBussinessApi,
   getUserListAllApi,
   saveBussinessAnduserApi,
+  getCardListAllApi 
 } from "@/api";
 import { ElMessage, ElMessageBox } from "element-plus";
 export default {
@@ -93,6 +121,7 @@ export default {
     // 数据初始化
     const dialogVisible = ref(false);
     const dialogUserVisible = ref(false);
+    const dialogCardVisible = ref(false);
     const page = ref(1);
     const pageSize = ref(10);
     const total = ref(0);
@@ -100,6 +129,12 @@ export default {
     const ruleForm = reactive({
       name: "",
       num: 1,
+    });
+    const cards = reactive({
+      data: [],
+    });
+    const ruleCardForm = reactive({
+      ids: [],
     });
     const ruleUserForm = reactive({
       ids: [],
@@ -130,6 +165,15 @@ export default {
         {
           required: true,
           message: "请选择员工",
+          trigger: "blur",
+        },
+      ],
+    });
+     const cardrules = reactive({
+      ids: [
+        {
+          required: true,
+          message: "请选择卡",
           trigger: "blur",
         },
       ],
@@ -213,13 +257,15 @@ export default {
       dialogUserVisible.value = !dialogUserVisible.value;
     }
     let bussinessId = 0;
-    let relationUserId=null;
+    let relationUserId = null;
     function FnAddUser(row) {
       bussinessId = row.id;
-      relationUserId=row.relationData?row.relationData.id:null;
-      ruleUserForm.ids=row.relationData?row.relationData.usersId.split(",").map((item)=>{
-        return parseInt(item)
-      }):"";
+      relationUserId = row.relationData ? row.relationData.id : null;
+      ruleUserForm.ids = row.relationData
+        ? row.relationData.usersId.split(",").map((item) => {
+            return parseInt(item);
+          })
+        : "";
       FnIsAddUserShow();
       if (dialogUserVisible.value) {
         dialogTitle.value = "添加员工";
@@ -228,7 +274,7 @@ export default {
     //公司关联员工
     function FnUserSubmit() {
       saveBussinessAnduserApi({
-        id:relationUserId,
+        id: relationUserId,
         bussinessId,
         usersId: ruleUserForm.ids,
       }).then((res) => {
@@ -243,19 +289,78 @@ export default {
     }
     init();
     function init() {
-      getBussinessListApi({ page: page.value, pageSize: pageSize.value }).then(
-        (res) => {
-          if (res.code) {
-            tableList.data = res.data.list;
-            total.value = res.data.total;
-          } else {
-            ElMessage.warning(res.msg);
+      Promise.all([
+        getBussinessListApi({ page: page.value, pageSize: pageSize.value }),
+        getUserListAllApi(),
+      ]).then((res) => {
+        if (!res[0].code) {
+          return ElMessage.warning(res[0].msg);
+        }
+        if (!res[1].code) {
+          return ElMessage.warning(res[1].msg);
+        }
+        tableList.data = res[0].data.list;
+        total.value = res[0].data.total;
+        users.data = res[1].data.list;
+        tableList.data.forEach((item) => {
+          let usersName = [];
+          let usersId = item.relationData
+            ? item.relationData.usersId.split(",")
+            : null;
+          if (Array.isArray(usersId)) {
+            for (let item of usersId) {
+              usersName.push(getUser(item, res[1].data.list));
+            }
+          }
+          item.usersName = usersName.join(",");
+        });
+      });
+      function getUser(item, users) {
+        for (let it of users) {
+          if (it.id == item) {
+            return it.userName;
           }
         }
-      );
-      getUserListAllApi().then((res) => {
+      }
+    }
+
+    //添加卡
+    function FnIsAddCardShow() {
+      dialogCardVisible.value = !dialogCardVisible.value;
+    }
+    let userId = 0;
+    let relationCardId = null;
+    function FnAddCard(row) {
+      userId = row.id;
+      relationCardId = row.relationData ? row.relationData.id : null;
+      ruleCardForm.ids = row.relationData
+        ? row.relationData.cardsId.split(",").map((item) => {
+            return parseInt(item);
+          })
+        : "";
+      FnIsAddCardShow();
+      if (dialogCardVisible.value) {
+        dialogTitle.value = "添加卡";
+      }
+    }
+    getCardListAllApi().then((res) => {
+      if (res.code) {
+        cards.data = res.data.list;
+      } else {
+        ElMessage.warning(res.msg);
+      }
+    });
+    //公司关联员工
+    function FnCardSubmit() {
+      saveUserAndcardApi({
+        id: relationCardId,
+        userId,
+        cardsId: ruleCardForm.ids,
+      }).then((res) => {
         if (res.code) {
-          users.data = res.data.list;
+          init();
+          FnIsAddCardShow();
+          ElMessage.success("修改成功");
         } else {
           ElMessage.warning(res.msg);
         }
@@ -281,7 +386,13 @@ export default {
       dialogUserVisible,
       FnIsAddUserShow,
       FnUserSubmit,
-      
+      FnIsAddCardShow,
+      FnCardSubmit,
+      cardrules,
+      FnAddCard,
+      dialogCardVisible,
+      ruleCardForm,
+      cards
     };
   },
   components: {

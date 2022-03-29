@@ -25,6 +25,13 @@ const routes = [
                 },
                 component: () => import( /* webpackChunkName: "dashboard" */ "../views/User.vue")
             },{
+                path: "/card",
+                name: "Card",
+                meta: {
+                    title: '卡列表'
+                },
+                component: () => import( /* webpackChunkName: "dashboard" */ "../views/Card.vue")
+            },{
                 path: '/404',
                 name: '404',
                 meta: {
